@@ -3,3 +3,4 @@ numpy
 soundfile
 deepgram-sdk
 python-dotenv
+groq

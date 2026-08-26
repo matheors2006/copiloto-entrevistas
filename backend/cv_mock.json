@@ -1,0 +1,37 @@
+{
+  "full_name": "Mateo Rivas",
+  "role": "Fullstack Developer",
+  "age": 20,
+  "years_of_experience": 2,
+  "summary": "Fullstack developer focused on building responsive web applications with Angular on the frontend and Django on the backend, with strong TypeScript fundamentals.",
+  "core_skills": [
+    "Angular",
+    "TypeScript",
+    "TailwindCSS",
+    "Python",
+    "Django",
+    "REST APIs",
+    "PostgreSQL",
+    "Git"
+  ],
+  "key_competencies": [
+    {
+      "name": "Component-driven frontend architecture",
+      "description": "Designs reusable, strongly-typed Angular component libraries styled with TailwindCSS, reducing UI duplication across projects."
+    },
+    {
+      "name": "API design with Django REST Framework",
+      "description": "Builds secure, well-documented REST APIs in Django, applying JWT authentication and query optimization for PostgreSQL-backed services."
+    }
+  ],
+  "notable_project": {
+    "name": "TaskFlow",
+    "description": "A team task-management platform with an Angular + TailwindCSS frontend and a Django REST Framework backend, supporting real-time task boards and role-based permissions.",
+    "technologies": ["Angular", "TypeScript", "TailwindCSS", "Django", "Django REST Framework", "PostgreSQL"],
+    "impact": "Reduced average task turnaround time for the pilot team by 30% and cut UI bug reports by 40% after introducing a shared component library."
+  },
+  "education": {
+    "degree": "Ingeniería en Sistemas Computacionales",
+    "status": "In progress"
+  }
+}
