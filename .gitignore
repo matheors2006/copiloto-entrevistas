@@ -18,6 +18,9 @@ __pycache__/
 # Audio files
 *.wav
 
+# Session-only transcript (cleared and regenerated on every run)
+current_transcript.txt
+
 # Node / Rust dependency folders
 node_modules/
 target/

@@ -9,6 +9,9 @@ from deepgram import AsyncDeepgramClient
 from deepgram.core.events import EventType
 from dotenv import load_dotenv
 
+if sys.platform == "win32":
+    os.system("chcp 65001 >nul")
+
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
@@ -16,9 +19,21 @@ DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 SAMPLE_RATE = 16000
 CHANNELS = 1
 BLOCK_SIZE = 1024
+TRANSCRIPT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "current_transcript.txt")
 
 GREEN = "\033[92m"
 RESET = "\033[0m"
+
+
+def reset_transcript_file():
+    """Clear the transcript file at the start of each session (no permanent history is kept)."""
+    open(TRANSCRIPT_FILE, "w", encoding="utf-8").close()
+
+
+def append_transcript(transcript):
+    """Append one finalized transcript segment to the current session's file."""
+    with open(TRANSCRIPT_FILE, "a", encoding="utf-8") as f:
+        f.write(transcript + "\n")
 
 
 def get_loopback_microphone():
@@ -40,6 +55,7 @@ def handle_message(message):
     transcript = message.channel.alternatives[0].transcript
     if transcript:
         print(f"{GREEN}Entrevistador: {transcript}{RESET}")
+        append_transcript(transcript)
 
 
 def handle_error(error):
@@ -52,6 +68,7 @@ async def stream_to_deepgram():
     if not DEEPGRAM_API_KEY:
         raise RuntimeError("DEEPGRAM_API_KEY no está definido en backend/.env")
 
+    reset_transcript_file()
     client = AsyncDeepgramClient(api_key=DEEPGRAM_API_KEY)
     microphone = get_loopback_microphone()
 
