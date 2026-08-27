@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
 
 type ServerMessage =
@@ -41,6 +42,7 @@ function App() {
     setOpacity((previous) => Math.min(MAX_OPACITY, +(previous + OPACITY_STEP).toFixed(2)));
   const decreaseOpacity = () =>
     setOpacity((previous) => Math.max(MIN_OPACITY, +(previous - OPACITY_STEP).toFixed(2)));
+  const closeWindow = () => getCurrentWindow().close();
 
   return (
     <div
@@ -74,6 +76,13 @@ function App() {
             title="Subir opacidad"
           >
             +
+          </button>
+          <button
+            onClick={closeWindow}
+            className="w-6 h-6 rounded bg-white/10 hover:bg-red-500/70 text-xs leading-none"
+            title="Cerrar ventana"
+          >
+            ×
           </button>
         </div>
       </div>
