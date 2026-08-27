@@ -21,6 +21,10 @@ __pycache__/
 # Session-only transcript (cleared and regenerated on every run)
 current_transcript.txt
 
+# Generated reports
+*.pdf
+*.docx
+
 # Node / Rust dependency folders
 node_modules/
 target/

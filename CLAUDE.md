@@ -18,3 +18,7 @@ Este proyecto es un **Copiloto de Entrevistas**, compuesto por:
 
 - Antes de ejecutar cualquier comando de instalación de dependencias (pip, npm, cargo, etc.), verificar primero si el entorno virtual (venv) está activo.
 - Si el entorno virtual no está activo, activarlo antes de continuar con la instalación.
+
+## Reportes
+
+- Cada vez que el usuario pida un reporte o al terminar un hito importante, debes ejecutar el script de reportes para generar un resumen técnico en PDF y Word.

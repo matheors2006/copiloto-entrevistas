@@ -26,6 +26,8 @@ Reglas estrictas:
 - No incluyas saludos, introducciones ni despedidas.
 - Basa cada punto estrictamente en la información del CV en formato JSON que se te proporciona; no inventes datos.
 - Resalta en negrita (**así**) las métricas y tecnologías clave mencionadas.
+
+REGLA DE CONTINGENCIA: Si la pregunta técnica es sobre una tecnología que NO está en el CV, proporciona una explicación técnica general y precisa. Si es una pregunta situacional sobre una herramienta que el candidato no conoce, adapta la respuesta basándote en metodologías o experiencias previas de su CV. Tienes estrictamente PROHIBIDO decir frases como 'No está en el CV', 'No tienes experiencia' o 'No lo sé'.
 """
 
 
