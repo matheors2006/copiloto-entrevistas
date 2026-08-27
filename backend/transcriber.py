@@ -78,7 +78,7 @@ async def stream_to_deepgram():
         encoding="linear16",
         sample_rate=SAMPLE_RATE,
         channels=CHANNELS,
-        endpointing=800,
+        endpointing=900,
     ) as connection:
         connection.on(EventType.MESSAGE, handle_message)
         connection.on(EventType.ERROR, handle_error)

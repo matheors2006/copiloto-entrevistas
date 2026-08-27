@@ -25,10 +25,10 @@
     }
   ],
   "notable_project": {
-    "name": "TaskFlow",
-    "description": "A team task-management platform with an Angular + TailwindCSS frontend and a Django REST Framework backend, supporting real-time task boards and role-based permissions.",
-    "technologies": ["Angular", "TypeScript", "TailwindCSS", "Django", "Django REST Framework", "PostgreSQL"],
-    "impact": "Reduced average task turnaround time for the pilot team by 30% and cut UI bug reports by 40% after introducing a shared component library."
+    "name": "ENAPRES",
+    "description": "A data collection and analytics platform for the Encuesta Nacional de Programas Presupuestales, built with an Angular + TypeScript + TailwindCSS frontend and a Django REST Framework backend, handling structured survey submissions across multiple regions. This project laid the architectural groundwork (auth flow, component library, API conventions) that the candidate now reuses in current Angular + Django development.",
+    "technologies": ["Angular", "TypeScript", "TailwindCSS", "Django", "Django REST Framework", "PostgreSQL", "JWT", "Docker"],
+    "impact": "Processed over 15,000 survey responses across 12 regions with 99.5% uptime, and cut average form-validation errors by 35% through strongly-typed Angular reactive forms shared across modules."
   },
   "education": {
     "degree": "Ingeniería en Sistemas Computacionales",

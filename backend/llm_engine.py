@@ -14,7 +14,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-120b"
 CV_MOCK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_mock.json")
 TEST_QUESTION = "¿Cómo organizarías la arquitectura de un proyecto nuevo en Django y Angular?"
 

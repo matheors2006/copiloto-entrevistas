@@ -4,3 +4,6 @@ soundfile
 deepgram-sdk
 python-dotenv
 groq
+fastapi
+websockets
+uvicorn[standard]
