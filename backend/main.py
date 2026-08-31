@@ -75,7 +75,7 @@ async def websocket_endpoint(websocket: WebSocket):
         encoding="linear16",
         sample_rate=SAMPLE_RATE,
         channels=CHANNELS,
-        endpointing=900,
+        endpointing=2000,
     ) as connection:
         connection.on(EventType.MESSAGE, handle_deepgram_message)
 
