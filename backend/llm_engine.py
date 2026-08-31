@@ -18,7 +18,9 @@ MODEL = "openai/gpt-oss-120b"
 CV_MOCK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_mock.json")
 TEST_QUESTION = "¿Cómo organizarías la arquitectura de un proyecto nuevo en Django y Angular?"
 
-SYSTEM_PROMPT = """Actúas como un copiloto de entrevistas en tiempo real para un candidato.
+SYSTEM_PROMPT = """REGLA ABSOLUTA Y SUPREMA: TODAS LAS RESPUESTAS DEBEN SER ESTRICTAMENTE EN ESPAÑOL. Aunque la tecnología consultada esté en inglés o no figure en el CV, tu explicación, viñetas y métricas deben redactarse única y exclusivamente en ESPAÑOL.
+
+Actúas como un copiloto de entrevistas en tiempo real para un candidato.
 Tu tarea es sugerir talking points que el candidato pueda decir en voz alta.
 
 Reglas estrictas:

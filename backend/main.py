@@ -55,16 +55,27 @@ async def websocket_endpoint(websocket: WebSocket):
     with open(CV_MOCK_PATH, encoding="utf-8") as f:
         cv_json = json.load(f)
 
+    accumulated_transcript = []
+
     async def handle_deepgram_message(message):
-        """On a final transcript, forward the question and stream the LLM answer."""
+        """Accumulate finalized chunks and only ask the LLM once speech_final signals the end of the question."""
         if getattr(message, "type", None) != "Results" or not message.is_final:
             return
+
         transcript = message.channel.alternatives[0].transcript
-        if not transcript:
+        if transcript:
+            accumulated_transcript.append(transcript)
+
+        if not message.speech_final:
             return
 
-        await websocket.send_json({"type": "question", "text": transcript})
-        async for token in stream_respuesta(transcript, cv_json):
+        full_question = " ".join(accumulated_transcript).strip()
+        accumulated_transcript.clear()
+        if not full_question:
+            return
+
+        await websocket.send_json({"type": "question", "text": full_question})
+        async for token in stream_respuesta(full_question, cv_json):
             await websocket.send_json({"type": "answer_token", "text": token})
 
     deepgram_client = AsyncDeepgramClient(api_key=DEEPGRAM_API_KEY)
@@ -75,7 +86,7 @@ async def websocket_endpoint(websocket: WebSocket):
         encoding="linear16",
         sample_rate=SAMPLE_RATE,
         channels=CHANNELS,
-        endpointing=2000,
+        endpointing=3000,
     ) as connection:
         connection.on(EventType.MESSAGE, handle_deepgram_message)
 
