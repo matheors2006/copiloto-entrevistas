@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
 
 type ServerMessage =
+  | { type: "interim_question"; text: string }
   | { type: "question"; text: string }
   | { type: "answer_token"; text: string };
 
@@ -25,7 +26,7 @@ function App() {
     socket.onmessage = (event) => {
       const message: ServerMessage = JSON.parse(event.data);
 
-      if (message.type === "question") {
+      if (message.type === "interim_question" || message.type === "question") {
         setQuestion(message.text);
         setAnswer("");
       } else if (message.type === "answer_token") {

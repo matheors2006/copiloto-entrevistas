@@ -58,7 +58,7 @@ async def websocket_endpoint(websocket: WebSocket):
     accumulated_transcript = []
 
     async def handle_deepgram_message(message):
-        """Accumulate finalized chunks and only ask the LLM once speech_final signals the end of the question."""
+        """Stream the accumulating question live, then ask the LLM once speech_final ends it."""
         if getattr(message, "type", None) != "Results" or not message.is_final:
             return
 
@@ -67,6 +67,10 @@ async def websocket_endpoint(websocket: WebSocket):
             accumulated_transcript.append(transcript)
 
         if not message.speech_final:
+            if accumulated_transcript:
+                await websocket.send_json(
+                    {"type": "interim_question", "text": " ".join(accumulated_transcript).strip()}
+                )
             return
 
         full_question = " ".join(accumulated_transcript).strip()
@@ -86,7 +90,7 @@ async def websocket_endpoint(websocket: WebSocket):
         encoding="linear16",
         sample_rate=SAMPLE_RATE,
         channels=CHANNELS,
-        endpointing=3000,
+        endpointing=1500,
     ) as connection:
         connection.on(EventType.MESSAGE, handle_deepgram_message)
 
