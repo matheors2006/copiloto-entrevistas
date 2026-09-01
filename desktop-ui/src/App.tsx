@@ -5,7 +5,8 @@ import "./App.css";
 type ServerMessage =
   | { type: "interim_question"; text: string }
   | { type: "question"; text: string }
-  | { type: "answer_token"; text: string };
+  | { type: "answer_token"; text: string }
+  | { type: "clear_answer" };
 
 const WS_URL = "ws://127.0.0.1:8000/ws";
 const SLATE_900_RGB = "15, 23, 42";
@@ -31,6 +32,8 @@ function App() {
         setAnswer("");
       } else if (message.type === "answer_token") {
         setAnswer((previous) => previous + message.text);
+      } else if (message.type === "clear_answer") {
+        setAnswer("");
       }
     };
 

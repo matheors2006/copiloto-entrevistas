@@ -56,9 +56,21 @@ async def websocket_endpoint(websocket: WebSocket):
         cv_json = json.load(f)
 
     accumulated_transcript = []
+    llm_task = None
+
+    async def run_llm_response(question_text):
+        """Stream the LLM answer as a standalone task, decoupled from the Deepgram listener."""
+        async for token in stream_respuesta(question_text, cv_json):
+            await websocket.send_json({"type": "answer_token", "text": token})
 
     async def handle_deepgram_message(message):
-        """Stream the accumulating question live, then ask the LLM once speech_final ends it."""
+        """Stream the accumulating question live, then hand off to the LLM once speech_final ends it.
+
+        The LLM call runs as a separate task instead of being awaited here, since awaiting it
+        directly would block this handler and, with it, the Deepgram listen loop that calls it
+        (`_emit_async` awaits each callback before reading the next websocket message).
+        """
+        nonlocal llm_task
         if getattr(message, "type", None) != "Results" or not message.is_final:
             return
 
@@ -78,9 +90,12 @@ async def websocket_endpoint(websocket: WebSocket):
         if not full_question:
             return
 
+        if llm_task is not None and not llm_task.done():
+            llm_task.cancel()
+
         await websocket.send_json({"type": "question", "text": full_question})
-        async for token in stream_respuesta(full_question, cv_json):
-            await websocket.send_json({"type": "answer_token", "text": token})
+        await websocket.send_json({"type": "clear_answer"})
+        llm_task = asyncio.create_task(run_llm_response(full_question))
 
     deepgram_client = AsyncDeepgramClient(api_key=DEEPGRAM_API_KEY)
 
@@ -109,7 +124,15 @@ async def websocket_endpoint(websocket: WebSocket):
         finally:
             for task in pending:
                 task.cancel()
-            await asyncio.gather(listen_task, audio_task, disconnect_task, return_exceptions=True)
+            if llm_task is not None:
+                llm_task.cancel()
+            await asyncio.gather(
+                listen_task,
+                audio_task,
+                disconnect_task,
+                *([llm_task] if llm_task is not None else []),
+                return_exceptions=True,
+            )
 
 
 if __name__ == "__main__":
