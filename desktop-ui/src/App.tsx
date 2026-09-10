@@ -6,19 +6,32 @@ type ServerMessage =
   | { type: "interim_question"; text: string }
   | { type: "question"; text: string }
   | { type: "answer_token"; text: string }
-  | { type: "clear_answer" };
+  | { type: "clear_answer" }
+  | { type: "translation"; text: string };
+
+type CvUploadStatus = "idle" | "loading" | "success" | "error";
 
 const WS_URL = "ws://127.0.0.1:8000/ws";
+const UPLOAD_CV_URL = "http://127.0.0.1:8000/upload-cv";
 const SLATE_900_RGB = "15, 23, 42";
 const OPACITY_STEP = 0.05;
 const MIN_OPACITY = 0.3;
 const MAX_OPACITY = 1;
+const CV_STATUS_LABEL: Record<CvUploadStatus, string> = {
+  idle: "Subir CV",
+  loading: "Cargando...",
+  success: "CV Actualizado",
+  error: "Error al subir",
+};
 
 function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [translation, setTranslation] = useState("");
   const [opacity, setOpacity] = useState(0.85);
+  const [cvStatus, setCvStatus] = useState<CvUploadStatus>("idle");
   const socketRef = useRef<WebSocket | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const socket = new WebSocket(WS_URL);
@@ -30,10 +43,13 @@ function App() {
       if (message.type === "interim_question" || message.type === "question") {
         setQuestion(message.text);
         setAnswer("");
+        setTranslation("");
       } else if (message.type === "answer_token") {
         setAnswer((previous) => previous + message.text);
       } else if (message.type === "clear_answer") {
         setAnswer("");
+      } else if (message.type === "translation") {
+        setTranslation(message.text);
       }
     };
 
@@ -47,6 +63,27 @@ function App() {
   const decreaseOpacity = () =>
     setOpacity((previous) => Math.max(MIN_OPACITY, +(previous - OPACITY_STEP).toFixed(2)));
   const closeWindow = () => getCurrentWindow().close();
+
+  const handleCvButtonClick = () => fileInputRef.current?.click();
+
+  const handleCvFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setCvStatus("loading");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(UPLOAD_CV_URL, { method: "POST", body: formData });
+      if (!response.ok) throw new Error("upload failed");
+      setCvStatus("success");
+    } catch {
+      setCvStatus("error");
+    } finally {
+      setTimeout(() => setCvStatus("idle"), 2500);
+    }
+  };
 
   return (
     <div
@@ -66,7 +103,22 @@ function App() {
           <span data-tauri-drag-region>Copiloto de Entrevistas</span>
         </button>
 
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={handleCvFileChange}
+          />
+          <button
+            onClick={handleCvButtonClick}
+            disabled={cvStatus === "loading"}
+            className="px-2 h-6 rounded bg-white/10 hover:bg-white/20 text-[10px] leading-none disabled:opacity-60"
+            title="Subir CV en PDF"
+          >
+            {CV_STATUS_LABEL[cvStatus]}
+          </button>
           <button
             onClick={decreaseOpacity}
             className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 text-xs leading-none"
@@ -97,6 +149,7 @@ function App() {
           <p className="text-yellow-400 font-medium leading-snug">
             {question || "Esperando la siguiente pregunta..."}
           </p>
+          {translation && <p className="text-white/40 italic text-sm mt-1">{translation}</p>}
         </div>
 
         <div>

@@ -9,3 +9,5 @@ websockets
 uvicorn[standard]
 python-docx
 fpdf2
+python-multipart
+pypdf
