@@ -9,8 +9,8 @@ import soundcard as sc
 from deepgram import AsyncDeepgramClient
 from deepgram.core.events import EventType
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
 
 from llm_engine import procesar_cv_pdf, stream_respuesta, traducir_pregunta
@@ -18,6 +18,13 @@ from llm_engine import procesar_cv_pdf, stream_respuesta, traducir_pregunta
 load_dotenv()
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 SAMPLE_RATE = 16000
@@ -43,12 +50,14 @@ async def upload_cv(file: UploadFile = File(...)):
         texto_pdf = "\n".join(page.extract_text() or "" for page in reader.pages).strip()
 
         if not texto_pdf:
-            return JSONResponse(status_code=400, content={"message": "No se pudo extraer texto del PDF"})
+            raise HTTPException(status_code=400, detail="No se pudo extraer texto del PDF")
 
         await procesar_cv_pdf(texto_pdf)
         return {"message": "CV actualizado correctamente"}
+    except HTTPException:
+        raise
     except Exception as error:
-        return JSONResponse(status_code=500, content={"message": f"Error al procesar el CV: {error}"})
+        raise HTTPException(status_code=500, detail=f"Error al procesar el CV: {error}")
 
 
 def get_loopback_microphone():
@@ -86,16 +95,26 @@ async def websocket_endpoint(websocket: WebSocket):
     accumulated_transcript = []
     llm_task = None
     translation_task = None
+    send_lock = asyncio.Lock()
+
+    async def send_json_safe(data):
+        """Serialize sends from the main handler and background tasks onto the same socket."""
+        try:
+            async with send_lock:
+                await websocket.send_json(data)
+        except Exception as error:
+            print(f"Error enviando por WebSocket: {error}")
 
     async def run_llm_response(question_text):
         """Stream the LLM answer as a standalone task, decoupled from the Deepgram listener."""
         async for token in stream_respuesta(question_text, cv_json):
-            await websocket.send_json({"type": "answer_token", "text": token})
+            await send_json_safe({"type": "answer_token", "text": token})
 
     async def run_translation(question_text):
         """Translate an English question to Spanish as a standalone task and forward it to the client."""
         translated = await traducir_pregunta(question_text)
-        await websocket.send_json({"type": "translation", "text": f"Traducción: {translated}"})
+        if translated:
+            await send_json_safe({"type": "translation", "text": f"Traducción: {translated}"})
 
     async def handle_deepgram_message(message):
         """Stream the accumulating question live, then hand off to the LLM once speech_final ends it.
@@ -115,7 +134,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
         if not message.speech_final:
             if accumulated_transcript:
-                await websocket.send_json(
+                await send_json_safe(
                     {"type": "interim_question", "text": " ".join(accumulated_transcript).strip()}
                 )
             return
@@ -130,8 +149,8 @@ async def websocket_endpoint(websocket: WebSocket):
         if translation_task is not None and not translation_task.done():
             translation_task.cancel()
 
-        await websocket.send_json({"type": "question", "text": full_question})
-        await websocket.send_json({"type": "clear_answer"})
+        await send_json_safe({"type": "question", "text": full_question})
+        await send_json_safe({"type": "clear_answer"})
         llm_task = asyncio.create_task(run_llm_response(full_question))
 
         detected_languages = alternative.languages or []

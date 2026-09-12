@@ -38,6 +38,8 @@ CV_JSON_SCHEMA_EXAMPLE = {
 
 SYSTEM_PROMPT = """REGLA DE IDIOMA: Responde EXACTAMENTE en el mismo idioma en el que se te hace la pregunta. Si la pregunta es en inglés, responde en inglés. Si es en español, responde en español. Mantén la regla de contingencia: nunca digas no sé, adapta la respuesta.
 
+INSTRUCCIÓN CRÍTICA: Debes detectar en qué idioma está escrita la pregunta del usuario. Si la pregunta está en INGLÉS, tu respuesta completa (explicación y viñetas) DEBE ser en INGLÉS. Si está en ESPAÑOL, responde en ESPAÑOL.
+
 Actúas como un copiloto de entrevistas en tiempo real para un candidato.
 Tu tarea es sugerir talking points que el candidato pueda decir en voz alta.
 
@@ -60,24 +62,32 @@ def build_user_prompt(pregunta, cv_json):
 
 
 async def stream_respuesta(pregunta, cv_json):
-    """Yield response tokens from Groq as they are generated, grounded in the candidate's CV."""
+    """Yield response tokens from Groq as they are generated, grounded in the candidate's CV.
+
+    Groq errors (timeouts, rate limits, connection drops) are logged and end the stream
+    gracefully instead of propagating, so they never take down the caller's WebSocket.
+    """
     if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY no está definido en backend/.env")
+        print("Error en stream_respuesta: GROQ_API_KEY no está definido en backend/.env")
+        return
 
     client = AsyncGroq(api_key=GROQ_API_KEY)
-    stream = await client.chat.completions.create(
-        model=MODEL,
-        stream=True,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": build_user_prompt(pregunta, cv_json)},
-        ],
-    )
+    try:
+        stream = await client.chat.completions.create(
+            model=MODEL,
+            stream=True,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": build_user_prompt(pregunta, cv_json)},
+            ],
+        )
 
-    async for chunk in stream:
-        token = chunk.choices[0].delta.content
-        if token:
-            yield token
+        async for chunk in stream:
+            token = chunk.choices[0].delta.content
+            if token:
+                yield token
+    except Exception as error:
+        print(f"Error en stream_respuesta: {error}")
 
 
 async def procesar_cv_pdf(texto_pdf):
@@ -112,22 +122,31 @@ async def procesar_cv_pdf(texto_pdf):
 
 
 async def traducir_pregunta(pregunta_ingles):
-    """Quickly translate an English question into Spanish using a smaller, faster model."""
+    """Quickly translate an English question into Spanish using a smaller, faster model.
+
+    Returns None on failure (timeout, rate limit, connection error) instead of raising,
+    so a Groq hiccup never takes down the caller's WebSocket.
+    """
     if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY no está definido en backend/.env")
+        print("Error en traducir_pregunta: GROQ_API_KEY no está definido en backend/.env")
+        return None
 
     client = AsyncGroq(api_key=GROQ_API_KEY)
-    response = await client.chat.completions.create(
-        model=FAST_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": "Traduce el siguiente texto al español. Responde únicamente con la traducción, sin explicaciones ni comillas.",
-            },
-            {"role": "user", "content": pregunta_ingles},
-        ],
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = await client.chat.completions.create(
+            model=FAST_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Traduce el siguiente texto al español. Responde únicamente con la traducción, sin explicaciones ni comillas.",
+                },
+                {"role": "user", "content": pregunta_ingles},
+            ],
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as error:
+        print(f"Error en traducir_pregunta: {error}")
+        return None
 
 
 async def _run_test():
