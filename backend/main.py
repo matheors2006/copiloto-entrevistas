@@ -95,6 +95,8 @@ async def websocket_endpoint(websocket: WebSocket):
     accumulated_transcript = []
     llm_task = None
     translation_task = None
+    last_question = ""
+    detected_language = "es"
     send_lock = asyncio.Lock()
 
     async def send_json_safe(data):
@@ -105,9 +107,9 @@ async def websocket_endpoint(websocket: WebSocket):
         except Exception as error:
             print(f"Error enviando por WebSocket: {error}")
 
-    async def run_llm_response(question_text):
+    async def run_llm_response(question_text, idioma_detectado):
         """Stream the LLM answer as a standalone task, decoupled from the Deepgram listener."""
-        async for token in stream_respuesta(question_text, cv_json):
+        async for token in stream_respuesta(question_text, cv_json, idioma_detectado):
             await send_json_safe({"type": "answer_token", "text": token})
 
     async def run_translation(question_text):
@@ -123,7 +125,7 @@ async def websocket_endpoint(websocket: WebSocket):
         directly would block this handler and, with it, the Deepgram listen loop that calls it
         (`_emit_async` awaits each callback before reading the next websocket message).
         """
-        nonlocal llm_task, translation_task
+        nonlocal llm_task, translation_task, last_question, detected_language
         if getattr(message, "type", None) != "Results" or not message.is_final:
             return
 
@@ -149,13 +151,52 @@ async def websocket_endpoint(websocket: WebSocket):
         if translation_task is not None and not translation_task.done():
             translation_task.cancel()
 
-        await send_json_safe({"type": "question", "text": full_question})
-        await send_json_safe({"type": "clear_answer"})
-        llm_task = asyncio.create_task(run_llm_response(full_question))
-
         detected_languages = alternative.languages or []
         is_english = "en" in detected_languages or (not detected_languages and looks_like_english(full_question))
+        detected_language = "en" if is_english else (detected_languages[0] if detected_languages else "es")
+        last_question = full_question
+
+        await send_json_safe({"type": "question", "text": full_question})
+        await send_json_safe({"type": "clear_answer"})
+        llm_task = asyncio.create_task(run_llm_response(full_question, detected_language))
         translation_task = asyncio.create_task(run_translation(full_question)) if is_english else None
+
+    async def listen_to_client():
+        """Loop over client-sent WebSocket messages, handling the manual 'force_response' override.
+
+        Runs for the lifetime of the connection; `websocket.receive_text()` raises
+        WebSocketDisconnect when the client goes away, which propagates out of this task and is
+        handled by the same disconnect path the rest of the pipeline already uses.
+        """
+        nonlocal llm_task, translation_task, last_question, detected_language
+        while True:
+            raw_message = await websocket.receive_text()
+            try:
+                data = json.loads(raw_message)
+            except json.JSONDecodeError:
+                continue
+
+            if data.get("type") != "force_response":
+                continue
+
+            question_text = " ".join(accumulated_transcript).strip() or last_question
+            accumulated_transcript.clear()
+            if not question_text:
+                continue
+
+            if llm_task is not None and not llm_task.done():
+                llm_task.cancel()
+            if translation_task is not None and not translation_task.done():
+                translation_task.cancel()
+
+            last_question = question_text
+            is_english = detected_language == "en" or looks_like_english(question_text)
+            detected_language = "en" if is_english else detected_language
+
+            await send_json_safe({"type": "question", "text": question_text})
+            await send_json_safe({"type": "clear_answer"})
+            llm_task = asyncio.create_task(run_llm_response(question_text, detected_language))
+            translation_task = asyncio.create_task(run_translation(question_text)) if is_english else None
 
     deepgram_client = AsyncDeepgramClient(api_key=DEEPGRAM_API_KEY)
 
@@ -171,13 +212,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
         listen_task = asyncio.create_task(connection.start_listening())
         audio_task = asyncio.create_task(pump_loopback_audio(connection))
-        disconnect_task = asyncio.create_task(websocket.receive_text())
+        client_listener_task = asyncio.create_task(listen_to_client())
 
-        pending = {listen_task, audio_task, disconnect_task}
+        pending = {listen_task, audio_task, client_listener_task}
         try:
             done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
-                if task is not disconnect_task and task.exception():
+                if task is not client_listener_task and task.exception():
                     raise task.exception()
         except WebSocketDisconnect:
             pass
@@ -191,7 +232,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await asyncio.gather(
                 listen_task,
                 audio_task,
-                disconnect_task,
+                client_listener_task,
                 *extra_tasks,
                 return_exceptions=True,
             )

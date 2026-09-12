@@ -61,8 +61,25 @@ def build_user_prompt(pregunta, cv_json):
     )
 
 
-async def stream_respuesta(pregunta, cv_json):
+def build_language_lock_prompt(idioma_detectado):
+    """Build a dynamic system message that overrides the CV's language bias with the detected one.
+
+    The base SYSTEM_PROMPT alone is sometimes ignored because the CV context (usually in
+    Spanish) outweighs the general instruction; this extra message pins the exact language code
+    Deepgram detected for this specific question.
+    """
+    return (
+        f"¡IMPORTANTE! El entrevistador ha hablado en código de idioma '{idioma_detectado}'. "
+        "DEBES redactar tu respuesta ÚNICA Y ESTRICTAMENTE en ese idioma. "
+        "Si es 'en', responde en Inglés. Si es 'es', responde en Español."
+    )
+
+
+async def stream_respuesta(pregunta, cv_json, idioma_detectado="es"):
     """Yield response tokens from Groq as they are generated, grounded in the candidate's CV.
+
+    `idioma_detectado` is the language code Deepgram detected for this question (e.g. "en", "es"),
+    injected as an extra system message so it takes priority over the CV's own language.
 
     Groq errors (timeouts, rate limits, connection drops) are logged and end the stream
     gracefully instead of propagating, so they never take down the caller's WebSocket.
@@ -78,6 +95,7 @@ async def stream_respuesta(pregunta, cv_json):
             stream=True,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": build_language_lock_prompt(idioma_detectado)},
                 {"role": "user", "content": build_user_prompt(pregunta, cv_json)},
             ],
         )

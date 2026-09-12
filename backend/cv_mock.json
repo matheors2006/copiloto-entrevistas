@@ -1,37 +1,68 @@
 {
-  "full_name": "Mateo Rivas",
+  "full_name": "Mateo Esteban Ramirez Sanchez",
   "role": "Fullstack Developer",
-  "age": 20,
-  "years_of_experience": 2,
-  "summary": "Fullstack developer focused on building responsive web applications with Angular on the frontend and Django on the backend, with strong TypeScript fundamentals.",
+  "age": 27,
+  "years_of_experience": 4,
+  "summary": "Fullstack Developer with 4+ years of experience building production-grade systems for critical sectors such as government, logistics, healthcare, and insurance. Specialized in high-performance backend development (Python/Django, .NET Core), reactive frontends (Angular/TypeScript), and active AI integration (LLM APIs, NLP, cognitive workflow automation). Proven ability to translate complex business requirements into scalable architectures and solve high-impact technical challenges.",
   "core_skills": [
-    "Angular",
-    "TypeScript",
-    "TailwindCSS",
     "Python",
     "Django",
-    "REST APIs",
+    ".NET Core",
+    "Angular",
+    "TypeScript",
+    "AWS",
+    "Docker",
+    "Terraform",
+    "FastAPI",
     "PostgreSQL",
-    "Git"
+    "SQL Server",
+    "MySQL",
+    "n8n",
+    "LLM/NLP integration"
   ],
   "key_competencies": [
     {
-      "name": "Component-driven frontend architecture",
-      "description": "Designs reusable, strongly-typed Angular component libraries styled with TailwindCSS, reducing UI duplication across projects."
+      "name": "AI & Backend Architecture",
+      "description": "Design and implementation of high‑performance backend services using Python, Django, FastAPI and .NET Core, often enriched with large language model capabilities."
     },
     {
-      "name": "API design with Django REST Framework",
-      "description": "Builds secure, well-documented REST APIs in Django, applying JWT authentication and query optimization for PostgreSQL-backed services."
+      "name": "RPA and Autonomous Agents",
+      "description": "Architected autonomous web‑navigation engines and RPA workflows with Python, Playwright and LLM APIs to extract unstructured data without manual intervention."
+    },
+    {
+      "name": "Workflow Orchestration",
+      "description": "Built event‑driven business processes using n8n, integrating RESTful APIs, Kafka and Celery for real‑time data synchronization."
+    },
+    {
+      "name": "Scalable Cloud Deployments",
+      "description": "Deployed containerized and serverless solutions on AWS and Azure, leveraging Docker, Kubernetes, Lambda, Fargate and Terraform for CI/CD pipelines."
+    },
+    {
+      "name": "Fullstack Integration",
+      "description": "Unified Angular front‑ends with Django/FASTAPI back‑ends via OpenAPI/Swagger, ensuring maintainable and documented communication layers."
     }
   ],
   "notable_project": {
-    "name": "ENAPRES",
-    "description": "A data collection and analytics platform for the Encuesta Nacional de Programas Presupuestales, built with an Angular + TypeScript + TailwindCSS frontend and a Django REST Framework backend, handling structured survey submissions across multiple regions. This project laid the architectural groundwork (auth flow, component library, API conventions) that the candidate now reuses in current Angular + Django development.",
-    "technologies": ["Angular", "TypeScript", "TailwindCSS", "Django", "Django REST Framework", "PostgreSQL", "JWT", "Docker"],
-    "impact": "Processed over 15,000 survey responses across 12 regions with 99.5% uptime, and cut average form-validation errors by 35% through strongly-typed Angular reactive forms shared across modules."
+    "name": "Autonomous RPA & AI Agent Platform (S.E.R. Consultory)",
+    "description": "Architected a suite of autonomous web‑navigation agents that use Playwright and LLMs (Claude/OpenAI) to extract, cleanse and ingest massive volumes of unstructured data into third‑party platforms, coupled with real‑time AI copilots for decision support.",
+    "technologies": [
+      "Python",
+      "Playwright",
+      "LLM APIs (Claude, OpenAI)",
+      "Azure",
+      "Docker",
+      "Terraform",
+      "FastAPI",
+      "PostgreSQL",
+      "SQL Server",
+      "Kafka",
+      "Celery",
+      "n8n"
+    ],
+    "impact": "Eliminated manual data entry, reducing processing time by over 80% and enabling continuous, error‑free data pipelines for critical business operations."
   },
   "education": {
-    "degree": "Ingeniería en Sistemas Computacionales",
-    "status": "In progress"
+    "degree": "Technical Degree in Information Systems (SENATI)",
+    "status": "Completed December 2023"
   }
 }

@@ -64,6 +64,13 @@ function App() {
     setOpacity((previous) => Math.max(MIN_OPACITY, +(previous - OPACITY_STEP).toFixed(2)));
   const closeWindow = () => getCurrentWindow().close();
 
+  const forceResponse = () => {
+    const socket = socketRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "force_response" }));
+    }
+  };
+
   const handleCvButtonClick = () => fileInputRef.current?.click();
 
   const handleCvFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,6 +125,13 @@ function App() {
             title="Subir CV en PDF"
           >
             {CV_STATUS_LABEL[cvStatus]}
+          </button>
+          <button
+            onClick={forceResponse}
+            className="px-2 h-6 rounded bg-white/10 hover:bg-amber-500/70 text-[10px] leading-none"
+            title="Forzar respuesta con la pregunta acumulada"
+          >
+            ⚡ Forzar Respuesta
           </button>
           <button
             onClick={decreaseOpacity}
