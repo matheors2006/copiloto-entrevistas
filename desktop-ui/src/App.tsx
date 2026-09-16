@@ -30,6 +30,7 @@ function App() {
   const [translation, setTranslation] = useState("");
   const [opacity, setOpacity] = useState(0.85);
   const [cvStatus, setCvStatus] = useState<CvUploadStatus>("idle");
+  const [isPaused, setIsPaused] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -71,6 +72,15 @@ function App() {
     }
   };
 
+  const togglePause = () => {
+    const nextPaused = !isPaused;
+    setIsPaused(nextPaused);
+    const socket = socketRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "toggle_pause", state: nextPaused }));
+    }
+  };
+
   const handleCvButtonClick = () => fileInputRef.current?.click();
 
   const handleCvFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +104,9 @@ function App() {
 
   return (
     <div
-      className="h-screen w-screen flex flex-col rounded-xl overflow-hidden text-white font-sans select-none"
+      className={`h-screen w-screen flex flex-col rounded-xl overflow-hidden text-white font-sans select-none transition-[filter] ${
+        isPaused ? "grayscale brightness-75" : ""
+      }`}
       style={{ backgroundColor: `rgba(${SLATE_900_RGB}, ${opacity})` }}
     >
       <div
@@ -108,9 +120,23 @@ function App() {
         >
           <span data-tauri-drag-region>⋮⋮</span>
           <span data-tauri-drag-region>Copiloto de Entrevistas</span>
+          {isPaused && (
+            <span className="px-1.5 py-0.5 rounded bg-red-500/80 text-white text-[9px] font-bold tracking-wider">
+              PAUSED
+            </span>
+          )}
         </button>
 
         <div className="flex items-center gap-1">
+          <button
+            onClick={togglePause}
+            className={`px-2 h-6 rounded text-[10px] leading-none ${
+              isPaused ? "bg-red-500/80 hover:bg-red-500" : "bg-white/10 hover:bg-white/20"
+            }`}
+            title={isPaused ? "Reanudar escucha" : "Pausar escucha"}
+          >
+            {isPaused ? "▶ Play" : "⏸ Pause"}
+          </button>
           <input
             ref={fileInputRef}
             type="file"

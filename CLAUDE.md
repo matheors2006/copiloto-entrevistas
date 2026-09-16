@@ -12,7 +12,7 @@ Este proyecto es un **Copiloto de Entrevistas**, compuesto por:
 ## Idioma
 
 - Todas las explicaciones, respuestas y comunicación dirigidas al usuario deben estar en **Español**.
-- Todo el código fuente (nombres de variables, funciones, clases, comentarios dentro del código, mensajes de commit, etc.) debe estar en **Inglés**.
+- A partir de ahora, TODOS los commits, TODA la documentación (README, SPEC, SKILL.md, etc.) y TODOS los comentarios de código deben escribirse EXCLUSIVAMENTE en **Inglés**, sin excepciones. Esto incluye también nombres de variables, funciones y clases en el código fuente.
 
 ## Entorno de desarrollo
 

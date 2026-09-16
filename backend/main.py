@@ -30,9 +30,17 @@ DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 SAMPLE_RATE = 16000
 CHANNELS = 1
 BLOCK_SIZE = 1024
+KEEP_ALIVE_INTERVAL_SECONDS = 5
 CV_MOCK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_mock.json")
 ENGLISH_HINT_WORDS = {"the", "what", "how", "why", "would", "could", "is", "are", "you", "your", "when"}
 SPANISH_HINT_CHARS = "ñáéíóúü¿¡"
+
+
+class PauseState:
+    """Mutable pause flag shared between the client message listener and the audio pump task."""
+
+    def __init__(self):
+        self.is_paused = False
 
 
 def looks_like_english(text):
@@ -72,11 +80,22 @@ def to_pcm16_bytes(audio_block):
     return (clipped * 32767).astype(np.int16).tobytes()
 
 
-async def pump_loopback_audio(deepgram_connection):
-    """Continuously capture system audio in small blocks and forward it to Deepgram."""
+async def pump_loopback_audio(deepgram_connection, pause_state):
+    """Continuously capture system audio in small blocks and forward it to Deepgram.
+
+    While `pause_state.is_paused` is True, real audio capture is skipped entirely and a
+    periodic KeepAlive control message is sent instead. This keeps the Deepgram WebSocket
+    connection alive (avoiding its inactivity timeout) without streaming or billing any
+    audio during small talk, and lets the connection resume instantly once unpaused.
+    """
     microphone = get_loopback_microphone()
     with microphone.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS, blocksize=BLOCK_SIZE) as recorder:
         while True:
+            if pause_state.is_paused:
+                await deepgram_connection.send_keep_alive()
+                await asyncio.sleep(KEEP_ALIVE_INTERVAL_SECONDS)
+                continue
+
             audio_block = await asyncio.to_thread(recorder.record, numframes=BLOCK_SIZE)
             await deepgram_connection.send_media(to_pcm16_bytes(audio_block))
 
@@ -97,6 +116,7 @@ async def websocket_endpoint(websocket: WebSocket):
     translation_task = None
     last_question = ""
     detected_language = "es"
+    pause_state = PauseState()
     send_lock = asyncio.Lock()
 
     async def send_json_safe(data):
@@ -162,7 +182,7 @@ async def websocket_endpoint(websocket: WebSocket):
         translation_task = asyncio.create_task(run_translation(full_question)) if is_english else None
 
     async def listen_to_client():
-        """Loop over client-sent WebSocket messages, handling the manual 'force_response' override.
+        """Loop over client-sent WebSocket messages: 'force_response' and 'toggle_pause'.
 
         Runs for the lifetime of the connection; `websocket.receive_text()` raises
         WebSocketDisconnect when the client goes away, which propagates out of this task and is
@@ -176,7 +196,13 @@ async def websocket_endpoint(websocket: WebSocket):
             except json.JSONDecodeError:
                 continue
 
-            if data.get("type") != "force_response":
+            message_type = data.get("type")
+
+            if message_type == "toggle_pause":
+                pause_state.is_paused = bool(data.get("state", False))
+                continue
+
+            if message_type != "force_response":
                 continue
 
             question_text = " ".join(accumulated_transcript).strip() or last_question
@@ -211,7 +237,7 @@ async def websocket_endpoint(websocket: WebSocket):
         connection.on(EventType.MESSAGE, handle_deepgram_message)
 
         listen_task = asyncio.create_task(connection.start_listening())
-        audio_task = asyncio.create_task(pump_loopback_audio(connection))
+        audio_task = asyncio.create_task(pump_loopback_audio(connection, pause_state))
         client_listener_task = asyncio.create_task(listen_to_client())
 
         pending = {listen_task, audio_task, client_listener_task}
