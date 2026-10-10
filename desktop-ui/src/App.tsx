@@ -31,6 +31,7 @@ function App() {
   const [opacity, setOpacity] = useState(0.85);
   const [cvStatus, setCvStatus] = useState<CvUploadStatus>("idle");
   const [isPaused, setIsPaused] = useState(false);
+  const [modo, setModo] = useState<'cv' | 'general'>('cv'); // NUEVO: Estado del modo
   const socketRef = useRef<WebSocket | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -81,6 +82,15 @@ function App() {
     }
   };
 
+  // NUEVO: Función para cambiar de modo y avisar al backend
+  const toggleModo = (nuevoModo: 'cv' | 'general') => {
+    setModo(nuevoModo);
+    const socket = socketRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "set_mode", mode: nuevoModo }));
+    }
+  };
+
   const handleCvButtonClick = () => fileInputRef.current?.click();
 
   const handleCvFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,7 +129,7 @@ function App() {
           title="Arrastrar ventana"
         >
           <span data-tauri-drag-region>⋮⋮</span>
-          <span data-tauri-drag-region>Copiloto de Entrevistas</span>
+          <span data-tauri-drag-region>Copiloto</span>
           {isPaused && (
             <span className="px-1.5 py-0.5 rounded bg-red-500/80 text-white text-[9px] font-bold tracking-wider">
               PAUSED
@@ -128,6 +138,28 @@ function App() {
         </button>
 
         <div className="flex items-center gap-1">
+          {/* NUEVO: Selector de Modo visual */}
+          <div className="flex bg-slate-800/50 rounded p-0.5 mx-1 border border-slate-700">
+            <button
+              onClick={() => toggleModo('cv')}
+              className={`px-2 py-0.5 text-[10px] font-semibold rounded transition-all ${
+                modo === 'cv' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Modo Entrevista (Basado en tu CV)"
+            >
+              Modo CV
+            </button>
+            <button
+              onClick={() => toggleModo('general')}
+              className={`px-2 py-0.5 text-[10px] font-semibold rounded transition-all ${
+                modo === 'general' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Modo Arquitecto IA (Conocimiento Técnico General)"
+            >
+              Modo IA
+            </button>
+          </div>
+
           <button
             onClick={togglePause}
             className={`px-2 h-6 rounded text-[10px] leading-none ${
@@ -157,7 +189,7 @@ function App() {
             className="px-2 h-6 rounded bg-white/10 hover:bg-amber-500/70 text-[10px] leading-none"
             title="Forzar respuesta con la pregunta acumulada"
           >
-            ⚡ Forzar Respuesta
+            ⚡
           </button>
           <button
             onClick={decreaseOpacity}
@@ -194,7 +226,10 @@ function App() {
 
         <div>
           <p className="text-[11px] uppercase tracking-wide text-white/40 mb-1">Talking Points</p>
-          <p className="text-emerald-400 leading-relaxed whitespace-pre-wrap">{answer}</p>
+          {/* El color de respuesta cambiará sutilmente para indicarte visualmente qué modo respondió */}
+          <p className={`leading-relaxed whitespace-pre-wrap ${modo === 'cv' ? 'text-emerald-400' : 'text-blue-400'}`}>
+            {answer}
+          </p>
         </div>
       </div>
     </div>

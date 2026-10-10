@@ -1,68 +1,58 @@
 {
   "full_name": "Mateo Esteban Ramirez Sanchez",
-  "role": "Fullstack Developer",
-  "age": 27,
+  "role": "Cloud & Backend Developer",
+  "age": 24,
   "years_of_experience": 4,
-  "summary": "Fullstack Developer with 4+ years of experience building production-grade systems for critical sectors such as government, logistics, healthcare, and insurance. Specialized in high-performance backend development (Python/Django, .NET Core), reactive frontends (Angular/TypeScript), and active AI integration (LLM APIs, NLP, cognitive workflow automation). Proven ability to translate complex business requirements into scalable architectures and solve high-impact technical challenges.",
+  "summary": "Cloud & Backend Developer with 4+ years of experience designing and implementing highly scalable, production‑grade systems on AWS. Expert in serverless architectures, event‑driven workflows, and AI/LLM integration using Node.js, TypeScript and Python. Proven ability to translate complex business requirements into secure, performant cloud‑native solutions with IaC and CI/CD best practices.",
   "core_skills": [
     "Python",
-    "Django",
-    ".NET Core",
-    "Angular",
+    "JavaScript",
     "TypeScript",
-    "AWS",
-    "Docker",
-    "Terraform",
-    "FastAPI",
-    "PostgreSQL",
-    "SQL Server",
-    "MySQL",
-    "n8n",
-    "LLM/NLP integration"
+    "Node.js",
+    "AWS (Lambda, ECS/Fargate, API Gateway, DynamoDB, RDS)",
+    "Serverless Architecture",
+    "Event‑Driven Design",
+    "Infrastructure as Code (CDK, Terraform)",
+    "CI/CD (GitHub Actions)",
+    "AI/LLM Integration"
   ],
   "key_competencies": [
     {
-      "name": "AI & Backend Architecture",
-      "description": "Design and implementation of high‑performance backend services using Python, Django, FastAPI and .NET Core, often enriched with large language model capabilities."
+      "name": "AWS Cloud Architecture",
+      "description": "Design and deployment of scalable, secure AWS solutions using Lambda, ECS/Fargate, API Gateway, DynamoDB, RDS and related services."
     },
     {
-      "name": "RPA and Autonomous Agents",
-      "description": "Architected autonomous web‑navigation engines and RPA workflows with Python, Playwright and LLM APIs to extract unstructured data without manual intervention."
+      "name": "Serverless & Event‑Driven Systems",
+      "description": "Build of decoupled, high‑throughput applications leveraging Lambda, Step Functions, EventBridge, SNS/SQS and n8n."
     },
     {
-      "name": "Workflow Orchestration",
-      "description": "Built event‑driven business processes using n8n, integrating RESTful APIs, Kafka and Celery for real‑time data synchronization."
+      "name": "AI & LLM Integration",
+      "description": "Implementation of Retrieval‑Augmented Generation, LangChain, OpenAI/Claude APIs and AI agents for data extraction and decision support."
     },
     {
-      "name": "Scalable Cloud Deployments",
-      "description": "Deployed containerized and serverless solutions on AWS and Azure, leveraging Docker, Kubernetes, Lambda, Fargate and Terraform for CI/CD pipelines."
-    },
-    {
-      "name": "Fullstack Integration",
-      "description": "Unified Angular front‑ends with Django/FASTAPI back‑ends via OpenAPI/Swagger, ensuring maintainable and documented communication layers."
+      "name": "Infrastructure as Code & CI/CD",
+      "description": "Automation of infrastructure provisioning with AWS CDK, Terraform and Serverless Framework, coupled with automated pipelines using GitHub Actions."
     }
   ],
   "notable_project": {
-    "name": "Autonomous RPA & AI Agent Platform (S.E.R. Consultory)",
-    "description": "Architected a suite of autonomous web‑navigation agents that use Playwright and LLMs (Claude/OpenAI) to extract, cleanse and ingest massive volumes of unstructured data into third‑party platforms, coupled with real‑time AI copilots for decision support.",
+    "name": "Autonomous Cloud‑Native AI Agents",
+    "description": "Architected autonomous web‑navigation engines that scrape and ingest unstructured data into Amazon S3 data lakes, providing real‑time AI‑driven insights for B2B clients.",
     "technologies": [
+      "AWS ECS (Fargate)",
       "Python",
       "Playwright",
-      "LLM APIs (Claude, OpenAI)",
-      "Azure",
-      "Docker",
-      "Terraform",
+      "Node.js",
+      "TypeScript",
       "FastAPI",
+      "Docker",
+      "LangGraph",
       "PostgreSQL",
-      "SQL Server",
-      "Kafka",
-      "Celery",
-      "n8n"
+      "AWS CDK"
     ],
-    "impact": "Eliminated manual data entry, reducing processing time by over 80% and enabling continuous, error‑free data pipelines for critical business operations."
+    "impact": "Automated large‑scale data extraction and processing, reducing manual effort by over 70% and enabling real‑time decision support for critical business workflows."
   },
   "education": {
-    "degree": "Technical Degree in Information Systems (SENATI)",
+    "degree": "Software Developer",
     "status": "Completed December 2023"
   }
 }

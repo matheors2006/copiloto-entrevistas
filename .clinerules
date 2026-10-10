@@ -1,0 +1,13 @@
+# Reglas del Proyecto (Spec-Driven Development)
+
+## Reglas de Comunicación
+- ALL system design, architecture planning, code, variables, functions, docstrings, and Git commits MUST be written exclusively in English.
+- You (Cline) MUST communicate, explain, and respond to the user exclusively in Spanish[cite: 4].
+
+## Metodología Estricta (SDD)
+- Spec-Driven Development (SDD) is mandatory: NEVER implement application logic before defining the schemas/interfaces and writing the failing tests[cite: 4].
+- Always read the specification documents in the `docs/` folder before suggesting or writing any code.
+
+## Optimización de Contexto
+- Do not read entire files if you only need to modify a specific function. Use targeted searches or rely on the workspace structure.
+- Always provide a brief explanation of the files you plan to read or modify before executing the action.

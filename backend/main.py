@@ -103,6 +103,8 @@ async def pump_loopback_audio(deepgram_connection, pause_state):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    # Nuevo estado para rastrear el modo seleccionado
+    sesion_estado = {"modo": "cv"}
 
     if not DEEPGRAM_API_KEY:
         await websocket.close(code=1011, reason="DEEPGRAM_API_KEY no configurado")
@@ -129,7 +131,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     async def run_llm_response(question_text, idioma_detectado):
         """Stream the LLM answer as a standalone task, decoupled from the Deepgram listener."""
-        async for token in stream_respuesta(question_text, cv_json, idioma_detectado):
+        async for token in stream_respuesta(question_text, cv_json, idioma_detectado, modo=sesion_estado["modo"]):
             await send_json_safe({"type": "answer_token", "text": token})
 
     async def run_translation(question_text):
@@ -182,7 +184,7 @@ async def websocket_endpoint(websocket: WebSocket):
         translation_task = asyncio.create_task(run_translation(full_question)) if is_english else None
 
     async def listen_to_client():
-        """Loop over client-sent WebSocket messages: 'force_response' and 'toggle_pause'.
+        """Loop over client-sent WebSocket messages: 'force_response', 'toggle_pause', and 'set_mode'.
 
         Runs for the lifetime of the connection; `websocket.receive_text()` raises
         WebSocketDisconnect when the client goes away, which propagates out of this task and is
@@ -197,6 +199,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
 
             message_type = data.get("type")
+            
+            # --- NUEVO: Escuchar el cambio de modo ---
+            if message_type == "set_mode":
+                sesion_estado["modo"] = data.get("mode", "cv")
+                print(f"Modo cambiado a: {sesion_estado['modo']}")
+                continue
 
             if message_type == "toggle_pause":
                 pause_state.is_paused = bool(data.get("state", False))
